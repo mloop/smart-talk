@@ -1,0 +1,94 @@
+---
+title: "An introduction to SMART designs"
+author: "Matthew Shane Loop, PhD"
+date: "`r Sys.Date()`"
+output: tint::tintPdf
+link-citations: yes
+---
+
+```{r setup, include=FALSE}
+library(tint)
+# invalidate cache when the package version changes
+knitr::opts_chunk$set(tidy = FALSE, cache.extra = packageVersion('tint'), echo = FALSE, warning = FALSE, message = FALSE)
+options(htmltools.dir.version = FALSE)
+```
+
+> _“Precision dosing” focuses on the individualization of drug treatment regimens based on patient factors known to alter drug disposition and/or response._
+>
+> `r quote_footer('--- Gonzalez et al. (2017)^[Gonzalez D, Rao GG, Bailey SC, Brouwer KLR, Cao Y, Crona DJ, et al. Precision Dosing: Public Health Need, Proposed Framework, and Anticipated Impact. Clin Transl Sci. 2017;10: 443–454.]')`
+
+# The problem
+
+We want to be able to tell clinicians and patients what dose should be given to a patient, based upon patient characteristics and their past treatment history.
+
+However, almost all randomized controlled trials (RCTs) use a parallel, 2-groups design. This design provides an estimate of the mean effect of a new dose for a currently untreated patient (or one treated at a standard dose) for a particular outcome. The basic premise of precision medicine in general, including precision dosing, is that there is a *distribution* of treatment effects in a population of eligible patients. The effect of the drug will be somewhat different from the expected effect.
+```{r, fig.margin=TRUE}
+library(tidyverse)
+df <- tibble(x = rnorm(1000, mean = 5, sd = 5))
+df %>% ggplot(aes(x = x), bins = 50) + geom_histogram() + labs(x = "Treatment effect of new dose")
+```
+The figure to the right shows the distribution of treatment effects for a possible new dose compared to an old dose, with a mean of 5 units. In a typical RCT, we get only the mean, or the center of the distribution. **We have no way to estimate the standard deviation / width of this distribution**.^[We can assess some variability in the dose's effect by looking at interactions between the new dose and known, measured, and modeled covariates such as age. But that still doesn't tell us about the total variation.]
+
+The parallel, 2-groups design also limits the pharmacist's ability to answer actual clinical questions of interest. The RCT reports what to expect, on average, if an untreated patient (or a patient treated with a standard dose) were given the new dose and treated that way until the end of study follow up (e.g., 1 year). The design assumes treatment decisions happen only once. However, patients are often up-titrated, down-titrated, or switched to another therapy because of adverse events or lack of perceived response.^[There is a bit of technical argument about what a "non-responder" is.] The pharmacist is attempting to tailor the dose to maximize benefit to the patient and minimize harm. The pharmacist must often rely on clinical experience to conduct this tailoring, without the benefit of population-based evidence.
+
+Modern RCT designs can address some of these limitations, but adoption of them can be slow. Today, we will talk about the Sequential Multiple Assignment Randomized Trial (SMART) design. This design is not often used in drug trials.^[The majority of applications have been in behavioral interventions such as mHealth interventions. One reason is that drug companies often don't want to pay for study drug in this type of design.] However, the academy is the ideal place to start trying them. We are not a business, but a non-profit that exists off the charity of citizens. We have the opportunity and enjoyment of trying new things that aren't yet viable in a free market.
+
+# The SMART design
+
+## General design of a SMART
+
+```{r, out.width='\\linewidth', fig.fullwidth = TRUE}
+knitr::include_graphics("~/Creative Cloud Files/snSMART.png")
+```
+The diagram above represents the simplest version of a SMART design. Initially, patients at baseline ($T_0$) are randomized to one of two doses: A or B. At $T_1$, patients are assessed for response to the therapy.^[The variable used for this assessment is called a *tailoring* variable.] If a patient has responded to the dose, then they stay on that dose. If not, then they are randomized to an alternative dose.^[In this minimal example, the only other dose is B, but one could imagine a setting with 5 doses: A through E. Participants could be randomized to one of the remaining 4 doses without restriction, or the randomization could be restricted to, say, a lower dose if the participant experienced toxicity.] The number of time points $T$ can be an arbitrary number and should ideally follow the usual care length of follow up in practice (e.g., every 3 months). 
+
+The design elements that must be chosen before conducting a SMART are:
+
+* available doses;
+* time periods;
+* tailoring variables;
+* definition of response; and
+* randomization rules (e.g., constrained randomization).
+
+
+## What new things can be estimated with a SMART vs. a parallel, 2-groups design?
+
+Recall that the product of a parallel, 2-groups design is the expected effect of a new dose on a currently untreated (or treated with a standard dose) patient, if I made only one treatment decision over the course of the study's length.
+
+With a SMART, you can answer the following questions:
+
+1. What is the best first-line dose?
+2. What is the best second-line dose if the patient has a toxic response to the first dose (i.e., too high)?
+3. What is the best second-line dose if the patient has no response to the first dose (i.e., too low)?
+4. What is the best sequence of treatment decision rules to maximize the beneficial outcome, based upon the tailoring variables?^[This sequence of treatment decision rules is called a dynamic treatment regimen (DTR).]
+5. What is the best sequence of treatment decision rules to maximize the beneficial outcome, based upon the tailoring variables *and individual patient covariates?*
+
+## How do you write a grant to fund a SMART?
+
+Many different questions can be answered using a SMART that cannot be answered using a parallel, 2-groups design. Per the training course I took this summer with Dr. Kelley Kidwell,^[Associate Professor, Department of Biostatistics, University of Michigan.] the typical aims of a grant implementing the smart design are:
+
+1. Estimate the overall effect of each dose as a first-line dose and identify the best one.
+2. Among patients who do not respond to the first-line therapy, estimate the overall effect of each second-line therapy and identify the best one.
+3. _Exploratory Aim_ Estimate the optimal dynamic treatment regimen (DTR) 
+
+Estimating the optimal DTR is often an exploratory aim because you have low power to detect its performance benefit. The idea is that if you find a DTR that seems reasonable, you can design another clinical trial to compare the benefit of the DTR to standard of care.
+
+# What should we do?
+
+One potential goal, among others, of the Precision Dosing Initiative could be to conduct a SMART design to clarify the best dosing strategy for a given patient population. **The population ideally would be large, with large treatment effect heterogeneity,^[This can't really be proven, but there may be a sense from clinical care which drugs/patients have a lot of heterogeneity (e.g., warfarin).] with a lot of varying opinions among providers concerning the best dosing strategy.**
+
+If there is not a clear candidate, a preliminary step would be to conduct an observational study where the current treatment protocol is similar to a SMART: a known set of drugs to treat a disease, with standardized protocols for length of follow up and deciding whether a patient has responded. This observational study would provide a less clean answer, but would be a "smaller bet" for DPET.
+
+Some of the best experts in designing SMARTs and estimating DTRs are right here in the Triangle: Dr. Michael Kosorok (UNC), Dr. Marie Davidian (NC State), and Dr. Eric Laber (Duke University). These experts could be a collaborative "backstop" to make sure the trial is implemented correctly and any statistical wrinkles of the trial are addressed.^[The SMART design and estimating DTRs is still an innovative area.] Their involvement would lower the risk of conducting this innovative study design.
+
+# Benefits to DPET
+
+The goal of precision dosing is to give each patient the best dose, in order to maximize good outcomes both for the patient and in the overall patient population. The assumption is that, in some situations, the same dose given to each patient does not accomplish precision dosing's goal.
+
+If we were to start implementing SMART designs in RCTs, there are benefits to DPET, including:
+
+* we could start running trials that actually mirror how patients in the pharmacy are treated;^["Everything we do begins and ends with a patient in mind."]
+* there are great collaborators in the Triangle who lower the risk of trying this new design;
+* using PK/PD parameters as tailoring variables in SMART designs is a  wide-open research area;
+* using PBPK modeling to improve estimates of the effects of different doses is a wide-open research area; and
+* we could could get answers to questions such as, "What dose should we start with? What should be the next dose, given someone isn't getting better from the first dose? If a person is > 70 years old and has mild disease, what dose should we give them compared to someone who is 35 with serious disease? Does that decision change based on first visit? Second visit? If we used the optimal DTR to give doses to patients, how much different would that be than giving everyone the same dose?"
